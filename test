@@ -1,0 +1,38 @@
+#!/bin/bash
+set -e
+
+cd $( dirname $0 )
+mkdir -p tmp
+
+if [ "$#" -lt 2 ]; then
+    echo "Enter a challenge name and a language"
+    exit 1
+fi
+
+DIR=$1
+LANGUAGE=$2
+
+run_rust()
+{
+    rustc "$DIR/rust.rs" -o "tmp/$DIR"
+    ACTUAL=$("tmp/$DIR" < "$INPUT_FILE")
+}
+
+find "$DIR" -maxdepth 1 -type d -name "sample*" | sort | while read SAMPLE; do
+    echo "Testing $SAMPLE"
+    EXPECTED=$(cat "$SAMPLE/output")
+    INPUT_FILE="$SAMPLE/input"
+    run_$LANGUAGE
+    if [ "$ACTUAL" = "$EXPECTED" ]; then
+        echo "Pass"
+    else
+        echo "Fail
+Input file:
+$(cat "$INPUT_FILE")
+Expected:
+$EXPECTED
+Actual:
+$ACTUAL"
+        exit 1
+    fi
+done
